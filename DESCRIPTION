@@ -1,0 +1,23 @@
+Package: GaMa
+Type: Package
+Title: GaMa: Diversity Analysis for Sequence Data
+Version: 0.1.0
+Author: Dr. Sandip Garai
+Maintainer: The package maintainer <sandipnicksandy@gmail.com>
+Description: The full form is Garai and Mantri. GaMa is an R package designed for the calculation of biological diversity using sequence data. It simplifies the process by requiring only sample IDs and accession numbers. Whether you're analyzing genetic or microbial diversity, GaMa provides efficient tools for diversity analysis. Serially one should go for the functions as presented here "expand_accession_ranges", "get_sequence_information", "preprocess_for_alignment", "write_fasta", "SampleID_vs_NumSequences", "data_sampling", "alignment_info", "compute_average_similarity_matrix", "generate_heatmaps", "clustering_average_similarity", "clustering_percent_similarity", "bubble_plot_count", "bubble_plot_percentage", "tree_average_similarity", "tree_percent_similarity". Till date there are total 15 functions.
+License: GPL-3
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.2.3
+Imports:
+    traits,
+    dplyr,
+    magrittr,
+    ggplot2,
+    Biostrings,
+    heatmaply,
+    reshape2,
+    dendextend,
+    stats,
+    ape,
+    grDevices

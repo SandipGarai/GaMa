@@ -1,0 +1,123 @@
+#' Perform Hierarchical Clustering for Percent Similarity
+#'
+#' This function performs hierarchical clustering based on a percent similarity matrix and provides additional information
+#' such as a colored dendrogram, clustered data, sample percentage within clusters, and total percentage for each cluster.
+#'
+#' @param similarity_matrix A matrix containing percent similarity values between SampleIDs.
+#' @param num_clusters_option The desired number of clusters. Default is 10.
+#' @param cut_height_option The height at which the dendrogram should be cut to obtain clusters. Default is 0.2.
+#' @param add_to_final_data A logical value indicating whether to add the clustering results to the final data. Default is TRUE.
+#'
+#' @return A list containing the dendrogram, clustered data, sample percentage within clusters, and total percentage for each cluster.
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' # clustering_result <- clustering_percent_similarity(percent_similarity_matrix)
+#' # dend_colored <- clustering_result$dendrogram
+#' # clustered_data <- clustering_result$clustered_data
+#' # Cluster_SampleID_Percentage <- clustering_result$Cluster_SampleID_Percentage
+#' # Cluster_TotalPercentage <- clustering_result$Cluster_TotalPercentage
+#'
+#' output_directory <- "output_directory/new"
+#' width_inch <- 8
+#' height_inch <- 6
+#' dpi <- 300
+#'
+#' clustering_result <- clustering_percent_similarity(percent_similarity_matrix)
+#'
+#' # Extract the dendrogram and clustered data
+#' dend_colored <- clustering_result$dendrogram
+#' clustered_data <- clustering_result$clustered_data
+#' Cluster_SampleID_Percentage <- clustering_result$Cluster_SampleID_Percentage
+#' Cluster_TotalPercentage <- clustering_result$Cluster_TotalPercentage
+#'
+#' tiff_file <- file.path(output_directory, "6. hierarchical_clustering_dendrogram_colored.tiff")
+#'
+#' # Save the dendrogram as a TIFF image
+#' tiff(tiff_file, width = width_inch, height = height_inch, units = "in", res = dpi)
+#' plot(dend_colored, main = "Colored Hierarchical Clustering Dendrogram")
+#' dev.off()
+#'
+#' # Save the clustered data frame to a CSV file
+#' write.csv(clustered_data, "output_directory/new/7. clustered_data.csv", row.names = FALSE)
+#' }
+#' @rdname K.clustering_percent_similarity
+#' @order 11
+clustering_percent_similarity <- function(similarity_matrix, num_clusters_option = 10, cut_height_option = 0.2, add_to_final_data = TRUE) {
+
+  similarity_matrix <- as.matrix(similarity_matrix)
+
+  # Check if num_clusters_option is greater than the number of rows or columns
+  if (num_clusters_option > nrow(similarity_matrix) || num_clusters_option > ncol(similarity_matrix)) {
+    num_clusters_option <- min(nrow(similarity_matrix), ncol(similarity_matrix))
+  }
+
+  # Perform hierarchical clustering using the similarity matrix
+  hc <- hclust(as.dist(1 - similarity_matrix), method = "complete")
+
+  # Create a dendrogram object
+  dend <- as.dendrogram(hc)
+
+  # Option 1: Cut the dendrogram to obtain clusters based on the number of clusters
+  clusters_option <- cutree(hc, k = num_clusters_option)
+
+  # Option 2: Cut the dendrogram to obtain clusters based on a specified height
+  clusters_height <- cutree(hc, h = cut_height_option)
+
+  # Choose between options based on your preference
+  if (length(unique(clusters_option)) < length(unique(clusters_height))) {
+    clusters <- clusters_option
+    num_clusters <- length(unique(clusters_option))
+  } else {
+    clusters <- clusters_height
+    num_clusters <- length(unique(clusters_height))
+  }
+
+  # Add color to the dendrogram based on clusters
+  dend_colored <- color_branches(dend, k = num_clusters)
+
+  # Determine which data frame to update based on the parameter
+  if (add_to_final_data) {
+    Clusters <- final_data$Clusters
+    final_data$Clusters <- clusters
+    clustered_data <- final_data
+  } else {
+    Clusters <- sampled_data$Clusters
+    sampled_data$Clusters <- clusters
+    clustered_data <- sampled_data
+  }
+
+  # Arrange Clustered_data based on the "Clusters" column
+  Clustered_data <- clustered_data %>%
+    arrange(Clusters)
+
+  SampleID <- Clustered_data$SampleID
+  Percentage <- Clustered_data$Percentage
+
+  # Calculate the percentage and add a new column
+  Cluster_SampleID_Percentage <- Clustered_data %>%
+    group_by(Clusters, SampleID) %>%
+    mutate(Percentage = n() / nrow(Clustered_data) * 100) %>%
+    arrange(Clusters)
+
+  # Create a new data frame with Cluster, SampleID, and Percentage columns
+  Cluster_SampleID_Percentage <- Cluster_SampleID_Percentage %>%
+    select(Clusters, SampleID, Percentage) %>%
+    distinct() %>%
+    arrange(Clusters)
+
+  # Create a new data frame with Cluster, SampleID, and Percentage columns
+  Cluster_TotalPercentage <- Cluster_SampleID_Percentage %>%
+    select(Clusters, SampleID, Percentage) %>%
+    distinct() %>%  # Remove duplicate rows, assuming the same combination appears multiple times
+    arrange(Clusters) %>%  # Order the data frame based on the Clusters column
+    group_by(Clusters) %>%  # Group by Clusters
+    summarize(Total_Percentage = sum(Percentage))  # Calculate the total percentage for each cluster
+
+  # Return the dendrogram, clustered data, and additional data frames
+  return(list(dendrogram = dend_colored,
+              clustered_data = Clustered_data,  # Return the arranged Clustered_data
+              Cluster_SampleID_Percentage = Cluster_SampleID_Percentage,
+              Cluster_TotalPercentage = Cluster_TotalPercentage))
+}

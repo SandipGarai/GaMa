@@ -1,0 +1,63 @@
+#' Bubble Plot Count Function
+#'
+#' This function generates a bubble plot using ggplot2.
+#'
+#' @param clustered_data A data frame containing clustered data.
+#' @param title The title of the plot.
+#' @param x_label The label for the x-axis.
+#' @param y_label The label for the y-axis.
+#' @param size_label The label for the size variable.
+#' @param color_label The label for the color variable.
+#'
+#' @return A ggplot object representing the bubble plot.
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' # Example usage with clustered_data
+#' clustered_data <- clustered_data # Load or generate your clustered data
+#' bubble_plot_count <- bubble_plot_count(clustered_data = clustered_data,
+#'                                       title = "Bubble Plot of Clusters",
+#'                                       x_label = "Clusters",
+#'                                       y_label = "Sample ID",
+#'                                       size_label = "Count",
+#'                                       color_label = "Sample ID")
+#'
+#' # Save the bubble plot as a TIFF image
+#' output_directory <- "output_directory/new"
+#' width_inch <- 8
+#' height_inch <- 6
+#' dpi <- 300
+#'
+#' # Set the file name for the TIFF image
+#' tiff_file <- file.path(output_directory, "bubble_plot_count.tiff")
+#'
+#' # Open the TIFF device
+#' tiff(tiff_file, width = width_inch, height = height_inch, units = "in", res = dpi)
+#'
+#' # Print and save the bubble plot
+#' print(bubble_plot_count)
+#'
+#' # Close the TIFF device
+#' dev.off()
+#' }
+#' @importFrom ggplot2 aes
+#' @rdname L.bubble_plot_count
+#' @order 12
+bubble_plot_count <- function(clustered_data, title, x_label, y_label, size_label, color_label) {
+
+  Clusters <- clustered_data$Clusters
+  SampleID <- clustered_data$SampleID
+  ..n.. <- clustered_data$..n..
+
+  plot <- ggplot(clustered_data, aes(x = as.factor(Clusters), y = SampleID, size = ..n.., color = as.factor(SampleID))) +
+    geom_count() +
+    labs(title = title,
+         x = x_label,
+         y = y_label,
+         size = size_label,
+         color = color_label) +
+    theme_minimal()
+
+  return(plot)
+}

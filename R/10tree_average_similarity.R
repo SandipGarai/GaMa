@@ -1,0 +1,64 @@
+#' Generate Phylogenetic Tree and Color Palette for Average Similarity
+#'
+#' This function generates a Neighbor-Joining phylogenetic tree and a color palette based on the average similarity matrix.
+#'
+#' @param similarity_matrix A matrix containing pairwise similarities between samples.
+#'
+#' @return A list containing the phylogenetic tree and a color palette.
+#' @export
+#' @importFrom ape nj
+#' @importFrom stats dist
+#' @importFrom grDevices rainbow
+#' @examples
+#' \dontrun{
+#' # Example usage with similarity_matrix
+#' result <- tree_average_similarity(average_percent_similarity)
+#' tree <- result$tree
+#' color_palette <- result$color_palette
+#'
+#' # Save the phylogenetic tree as a Newick file
+#' write.tree(tree, file = "output_directory/new/phylogenetic_tree_nj.nwk")
+#'
+#' # Save the phylogenetic tree as a TIFF image
+#' output_directory <- "output_directory/new"
+#' width_inch <- 8
+#' height_inch <- 6
+#' dpi <- 300
+#'
+#' # Set the file name for the TIFF image
+#' tiff_file <- file.path(output_directory, "phylogenetic_tree.tiff")
+#'
+#' # Open the TIFF device
+#' tiff(tiff_file, width = width_inch, height = height_inch, units = "in", res = dpi)
+#'
+#' # Plot the phylogenetic tree vertically
+#' plot(tree, main = "Neighbor-Joining Tree", cex = 1, direction = "downward")
+#'
+#' # Close the TIFF device
+#' dev.off()
+#'
+#' # Set the file name for the TIFF image with rainbow-colored branches
+#' tiff_file_rainbow <- file.path(output_directory, "phylogenetic_tree_rainbow.tiff")
+#'
+#' # Open the TIFF device
+#' tiff(tiff_file_rainbow, width = width_inch, height = height_inch, units = "in", res = dpi)
+#'
+#' # Plot the phylogenetic tree vertically with rainbow-colored branches
+#' plot(tree, main = "NJ Tree", cex = 1, direction = "downward", tip.color = color_palette)
+#'
+#' # Close the TIFF device
+#' dev.off()
+#' }
+#' @rdname N.tree_average_similarity
+#' @order 14
+tree_average_similarity <- function(similarity_matrix) {
+  # Create neighbor-joining tree
+  tree <- nj(dist(as.matrix(1 - similarity_matrix)))
+
+  # Generate a color palette based on the number of tips in the tree
+  num_tips <- length(tree$tip.label)
+  color_palette <- rainbow(num_tips)
+
+  # Return the tree and color palette
+  return(list(tree = tree, color_palette = color_palette))
+}

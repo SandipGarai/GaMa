@@ -1,0 +1,87 @@
+# Function to preprocess data for alignment
+#' Preprocesses data for sequence alignment.
+#'
+#' This function merges sample and accession information with sequence information,
+#' filters out rows with missing sequences, and extracts relevant columns for the final data.
+#'
+#' @param sam_acc A data frame containing sample and accession information.
+#' @param seq_info A data frame containing sequence information.
+#'
+#' @return A list containing the resulting data frames: 'merged_data', 'main_data', 'final_data'.
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' # Example usage
+#' result <- preprocess_for_alignment(sam_acc, seq_info)
+#'
+#' # Access the resulting data frames
+#' merged_data <- result$merged_data
+#' main_data <- result$main_data
+#' final_data <- result$final_data
+#' }
+#' @import dplyr
+#' @import magrittr
+#' @importFrom dplyr select filter group_by mutate ungroup row_number
+#' @importFrom magrittr %>%
+#' @rdname C.preprocess_for_alignment
+#' @order 3
+preprocess_for_alignment <- function(sam_acc, seq_info) {
+
+  # Check if sam_acc has the expected columns
+  sam_acc_columns <- c("accession", "sample")
+
+  if (!all(sam_acc_columns %in% colnames(sam_acc))) {
+    stop("sam_acc data frame does not have the expected columns.")
+  }
+
+  # Check if seq_info has the expected columns
+  seq_info_columns <- c("acc_no", "taxon", "taxonomy", "gene_desc", "length", "sequence")
+  if (!all(seq_info_columns %in% colnames(seq_info))) {
+    stop("seq_info data frame does not have the expected columns.")
+  }
+
+  accession <- sam_acc$accession
+  acc_no <- seq_info$acc_no
+
+  # Step 1: Merge data frames using the 'accession' and 'acc_no' columns
+  merged_data <- merge(sam_acc, seq_info, by.x = "accession", by.y = "acc_no", all.x = TRUE)
+
+  sample <- sam_acc$sample
+
+  taxon <- seq_info$taxon
+  taxonomy <- seq_info$taxonomy
+  gene_desc <- seq_info$gene_desc
+  length <- seq_info$length
+  sequence <- seq_info$sequence
+
+  # Step 2: Select relevant columns for main data frame
+  main_data <- merged_data %>%
+    select(
+      Accession = accession,
+      SampleID = sample,
+      Taxon = taxon,
+      Taxonomy = taxonomy,
+      Gene_desc = gene_desc,
+      Length = length,
+      Sequence = sequence
+    )
+
+  # Step 3: Filter out rows with NA in the 'Sequence' column
+  main_data <- main_data %>%
+    filter(!is.na(Sequence))
+
+  SampleID <- main_data$SampleID
+  SequenceID <- main_data$SequenceID
+  Sequence <- main_data$Sequence
+
+  # Step 4: Extract relevant columns for the 'final' data
+  final_data <- main_data %>%
+    group_by(SampleID) %>%
+    mutate(SequenceID = paste0(SampleID, ".", row_number())) %>%
+    ungroup() %>%
+    select(SampleID, SequenceID, Sequence)
+
+  # Return the resulting data frames
+  return(list(merged_data = merged_data, main_data = main_data, final_data = final_data))
+}

@@ -1,0 +1,72 @@
+#' Generate Phylogenetic Tree and Color Palette for Percent Similarity Matrix
+#'
+#' This function generates a Neighbor-Joining phylogenetic tree and a color palette based on the percent similarity matrix.
+#'
+#' @param percent_similarity_matrix A matrix containing pairwise percent similarities between samples.
+#'
+#' @return A list containing the phylogenetic tree and a color palette.
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' # Example usage with percent_similarity_matrix
+#' result <- tree_percent_similarity(percent_similarity_matrix)
+#' tree <- result$tree
+#' color_palette <- result$color_palette
+#'
+#' # Save the phylogenetic tree as a Newick file
+#' write.tree(tree, file = "output_directory/new/phylogenetic_tree_nj.nwk")
+#'
+#' # Save the phylogenetic tree as a TIFF image
+#' output_directory <- "output_directory/new"
+#' width_inch <- 8
+#' height_inch <- 6
+#' dpi <- 300
+#'
+#' # Set the file name for the TIFF image
+#' tiff_file <- file.path(output_directory, "phylogenetic_tree.tiff")
+#'
+#' # Open the TIFF device
+#' tiff(tiff_file, width = width_inch, height = height_inch, units = "in", res = dpi)
+#'
+#' # Plot the phylogenetic tree vertically
+#' plot(tree, main = "Neighbor-Joining Tree", cex = 1, direction = "downward")
+#'
+#' # Close the TIFF device
+#' dev.off()
+#'
+#' # Set the file name for the TIFF image with rainbow-colored branches
+#' tiff_file_rainbow <- file.path(output_directory, "phylogenetic_tree_rainbow.tiff")
+#'
+#' # Open the TIFF device
+#' tiff(tiff_file_rainbow, width = width_inch, height = height_inch, units = "in", res = dpi)
+#'
+#' # Plot the phylogenetic tree vertically with rainbow-colored branches
+#' plot(tree, main = "NJ Tree", cex = 1, direction = "downward", tip.color = color_palette)
+#'
+#' # Close the TIFF device
+#' dev.off()
+#' }
+#' @rdname O.tree_percent_similarity
+#' @order 15
+tree_percent_similarity <- function(percent_similarity_matrix) {
+  # Create a copy of the original matrix
+  complete_percent_similarity <- as.matrix(percent_similarity_matrix)
+
+  # Assuming percent_similarity_matrix is your original matrix
+  complete_percent_similarity[upper.tri(complete_percent_similarity)] <-
+    t(complete_percent_similarity)[upper.tri(complete_percent_similarity)]
+
+  # Set all diagonal elements to 1
+  diag(complete_percent_similarity) <- 1
+
+  # Create neighbor-joining tree
+  tree <- nj(dist(as.matrix(1 - complete_percent_similarity)))
+
+  # Generate a color palette based on the number of tips in the tree
+  num_tips <- length(tree$tip.label)
+  color_palette <- rainbow(num_tips)
+
+  # Return the tree and color palette
+  return(list(tree = tree, color_palette = color_palette))
+}

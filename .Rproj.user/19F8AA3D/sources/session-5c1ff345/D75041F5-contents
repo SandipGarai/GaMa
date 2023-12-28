@@ -1,0 +1,42 @@
+# Function to sample data if specified, otherwise use final data
+#' Samples data from each SampleID group if specified, otherwise uses the final data.
+#'
+#' This function takes a data frame with 'SampleID' and 'SequenceID' columns and
+#' either returns the original data frame (if sample_proportion is NULL) or
+#' samples a specified proportion from each SampleID group.
+#'
+#' @param final_data A data frame with 'SampleID' and 'SequenceID' columns.
+#' @param sample_proportion Proportion of data to sample from each SampleID group.
+#'   If NULL, the original data frame is returned.
+#'
+#' @return A data frame either with the original data or sampled data based on the specified proportion.
+#' @export
+#' @examples
+#' \dontrun{
+#' # Example usage:
+#' # If you want to use the final data:
+#' final_data <- preprocess_for_alignment(sam_acc, seq_info)$final_data
+#'
+#' # If you want to sample 10% from each SampleID group:
+#' sampled_data <- data_sampling(final_data, sample_proportion = 0.1)
+#' }
+#' @import dplyr
+#' @importFrom dplyr group_by slice_sample ungroup
+#' @rdname F.data_sampling
+#' @order 6
+data_sampling <- function(final_data, sample_proportion = NULL) {
+
+  SampleID <- sampled_data$SampleID
+
+  if (is.null(sample_proportion)) {
+    # If sample_proportion is not specified, return the final data
+    return(final_data)
+  } else {
+    # Sample a proportion from each SampleID group
+    sampled_data <- final_data %>%
+      group_by(SampleID) %>%
+      slice_sample(prop = sample_proportion) %>%
+      ungroup()
+    return(sampled_data)
+  }
+}

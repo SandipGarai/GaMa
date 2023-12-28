@@ -1,0 +1,82 @@
+# Expand Accession Number Ranges
+#'
+#' This function expands accession number ranges, creating a data frame with sample and accession numbers.
+#'
+#' @param accession_ranges A named list where each element represents an accession range.
+#'   The names of the list elements should correspond to sample names.
+#'
+#' @return A data frame with columns 'sample' and 'accession'.
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' # Example of defining accession number ranges.
+#' accession_ranges <- list(
+#'   SRU1 = "AJ240966 to AJ240970",
+#'   STU2 = "AB015240 to AB015250",
+#'   WRU8 = c("AF245628", "AF353208 to AF353210"),
+#'   WPU13 = "L11934 to L11940",
+#'   INU20 = c("AF277467 to AF277470", "AF333080 to AF333086")
+#' )
+#'
+#' # Use the function to expand accession ranges
+#' sam_acc <- expand_accession_ranges(accession_ranges)
+#' print(sam_acc)
+#' }
+#' @rdname A.expand_accession_ranges
+#' @order 1
+expand_accession_ranges <- function(accession_ranges) {
+  # Function to expand accession number ranges
+  expand_accession_range <- function(range) {
+    ranges <- unlist(strsplit(range, ","))
+
+    expanded_accessions <- character(0)
+
+    for (r in ranges) {
+      parts <- strsplit(trimws(r), " to ")[[1]]
+
+      prefix <- gsub("[0-9]", "", parts[1])
+      start_num <- as.numeric(gsub("[^0-9]", "", parts[1]))
+
+      if (length(parts) == 1) {
+        # For single values
+        format_string <- ifelse(prefix %in% c("L", "U"), "%s%05d", "%s%06d")
+        expanded_accessions <- c(expanded_accessions, sprintf(format_string, prefix, start_num))
+      } else {
+        # For ranges
+        end_num <- as.numeric(gsub("[^0-9]", "", parts[2]))
+        seq_range <- seq(start_num, end_num)
+
+        format_string <- ifelse(prefix %in% c("L", "U"), "%s%05d", "%s%06d")
+        expanded_accessions <- c(expanded_accessions, sprintf(format_string, prefix, seq_range))
+      }
+    }
+
+    return(expanded_accessions)
+  }
+
+  # Create a data frame to store sample and accession numbers
+  sam_acc <- data.frame(
+    sample = character(),
+    accession = character(),
+    stringsAsFactors = FALSE
+  )
+
+  # Loop through the accession ranges and expand them
+  for (key in names(accession_ranges)) {
+    accession_range <- accession_ranges[[key]]
+    expanded_accessions <- expand_accession_range(accession_range)
+
+    # Create a data frame with sample and accession numbers
+    temp_df <- data.frame(
+      sample = rep(key, length(expanded_accessions)),
+      accession = expanded_accessions
+    )
+
+    # Combine with the main data frame
+    sam_acc <- rbind(sam_acc, temp_df)
+  }
+
+  # Return the resulting data frame
+  return(sam_acc)
+}
