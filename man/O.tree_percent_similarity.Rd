@@ -23,7 +23,7 @@ tree <- result$tree
 color_palette <- result$color_palette
 
 # Save the phylogenetic tree as a Newick file
-write.tree(tree, file = "output_directory/new/phylogenetic_tree_nj.nwk")
+ape::write.tree(tree, file = "output_directory/new/phylogenetic_tree_nj.nwk")
 
 # Save the phylogenetic tree as a TIFF image
 output_directory <- "output_directory/new"

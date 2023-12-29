@@ -29,8 +29,8 @@
 #'
 #' # Save the interactive heatmap as an HTML file ####
 #' html <- file.path(output_directory, "5. heatmap.html")
-#'
-#' saveWidget(heatmap_files$html, file = html)
+#' htmlwidgets should be installed and loaded
+#' htmlwidgets::saveWidget(heatmap_files$html, file = html)
 #'
 #' # save the TIFFE images ####
 #'
@@ -56,8 +56,8 @@
 #' tiff3 <- file.path(output_directory, "5. heatmap3.tiff")
 #'
 #' # Open the TIFF device and create the heatmap.2 with hierarchical clustering dendrogram
-#'
-#' heatmap.2(as.matrix(average_percent_similarity),
+#' # gplots should be installed and loaded
+#' gplots::heatmap.2(as.matrix(average_percent_similarity),
 #'           dendrogram = "row",
 #'           Colv = "Rowv",
 #'           scale = "row",

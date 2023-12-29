@@ -48,9 +48,18 @@ bubble_plot_count <- function(clustered_data, title, x_label, y_label, size_labe
 
   Clusters <- clustered_data$Clusters
   SampleID <- clustered_data$SampleID
-  ..n.. <- clustered_data$..n..
 
-  plot <- ggplot(clustered_data, aes(x = as.factor(Clusters), y = SampleID, size = ..n.., color = as.factor(SampleID))) +
+  # Compute count using dplyr::count
+  count_data <- clustered_data %>%
+    count(Clusters, SampleID, name = "Count")
+
+  Count <- count_data$Count
+
+  # Merge the count_data back to clustered_data
+  clustered_data <- merge(clustered_data, count_data, by = c("Clusters", "SampleID"), all.x = TRUE)
+
+  # Create the plot
+  plot <- ggplot(clustered_data, aes(x = as.factor(Clusters), y = SampleID, size = Count, color = as.factor(SampleID))) +
     geom_count() +
     labs(title = title,
          x = x_label,

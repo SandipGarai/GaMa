@@ -79,26 +79,39 @@ clustering_percent_similarity <- function(similarity_matrix, num_clusters_option
 
   # Determine which data frame to update based on the parameter
   if (add_to_final_data) {
-    Clusters <- final_data$Clusters
-    final_data$Clusters <- clusters
+    # Ensure that Clusters and Percentage columns exist and are initialized
+    if (!("Clusters" %in% names(final_data))) {
+      final_data$Clusters <- NA  # Initialize with some default value or appropriate logic
+    }
+
+    if (!("Percentage" %in% names(final_data))) {
+      final_data$Percentage <- NA  # Initialize with some default value or appropriate logic
+    }
     clustered_data <- final_data
   } else {
-    Clusters <- sampled_data$Clusters
-    sampled_data$Clusters <- clusters
+    # Ensure that Clusters and Percentage columns exist and are initialized
+    if (!("Clusters" %in% names(sampled_data))) {
+      sampled_data$Clusters <- NA  # Initialize with some default value or appropriate logic
+    }
+
+    if (!("Percentage" %in% names(sampled_data))) {
+      sampled_data$Percentage <- NA  # Initialize with some default value or appropriate logic
+    }
     clustered_data <- sampled_data
   }
 
-  # Arrange Clustered_data based on the "Clusters" column
-  Clustered_data <- clustered_data %>%
+  Clusters <- clustered_data$Clusters
+  SampleID <- clustered_data$SampleID
+  Percentage <- clustered_data$Percentage
+
+  # Arrange clustered_data based on the "Clusters" column
+  clustered_data <- clustered_data %>%
     arrange(Clusters)
 
-  SampleID <- Clustered_data$SampleID
-  Percentage <- Clustered_data$Percentage
-
   # Calculate the percentage and add a new column
-  Cluster_SampleID_Percentage <- Clustered_data %>%
+  Cluster_SampleID_Percentage <- clustered_data %>%
     group_by(Clusters, SampleID) %>%
-    mutate(Percentage = n() / nrow(Clustered_data) * 100) %>%
+    mutate(Percentage = n() / nrow(clustered_data) * 100) %>%
     arrange(Clusters)
 
   # Create a new data frame with Cluster, SampleID, and Percentage columns
@@ -117,7 +130,7 @@ clustering_percent_similarity <- function(similarity_matrix, num_clusters_option
 
   # Return the dendrogram, clustered data, and additional data frames
   return(list(dendrogram = dend_colored,
-              clustered_data = Clustered_data,  # Return the arranged Clustered_data
+              clustered_data = clustered_data,  # Return the arranged clustered_data
               Cluster_SampleID_Percentage = Cluster_SampleID_Percentage,
               Cluster_TotalPercentage = Cluster_TotalPercentage))
 }

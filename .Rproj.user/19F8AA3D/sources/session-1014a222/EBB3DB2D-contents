@@ -1,0 +1,283 @@
+# setwd("F:/Academics/My/Projects/Others/NABI/Learn Bioinformatics/Analysis/Diversity/GaMaCheck")
+
+# List of packages ####
+packages_to_install <- c("remotes")
+# Install and load packages
+for (package in packages_to_install) {
+  # Install the package if not already installed
+  if (!requireNamespace(package, quietly = TRUE)) {
+    install.packages(package)
+  }
+  
+  # Load the package
+  library(package, character.only = TRUE)
+}
+
+# Install GaMa and other Bioconductor packages ####
+packages_to_install <- c("BiocManager", "BiocGenerics", "S4Vectors", "IRanges", "XVector", "GenomeInfoDb", "GaMa")
+
+# Install and load packages
+for (package in packages_to_install) {
+  # Install the package if not already installed
+  if (!requireNamespace(package, quietly = TRUE)) {
+    if (package == "GaMa") {
+      remotes::install_github("SandipGarai/GaMa", ref = "master", dependencies = TRUE)
+    } else {
+      BiocManager::install(package)
+    }
+  }
+  
+  # Load the package
+  library(package, character.only = TRUE)
+}
+
+# List of parent directory names
+parent_directories <- c("GaMaCheck")
+
+# List of subdirectory names
+subdirectories <- c("output_directory")
+
+# Loop through each parent directory
+for (parent_directory in parent_directories) {
+  # Combine the current parent directory with each subdirectory
+  for (subdirectory in subdirectories) {
+    # Combine the parent and subdirectory paths
+    current_output_directory <- file.path(parent_directory, subdirectory)
+    
+    # Check if the directory exists, and create it if not
+    if (!file.exists(current_output_directory)) {
+      dir.create(current_output_directory, recursive = TRUE)
+    }
+  }
+}
+
+# Install GaMa ####
+packages_to_install <- c("GaMa")
+# Install and load packages
+for (package in packages_to_install) {
+  # Install the package if not already installed
+  if (!requireNamespace(package, quietly = TRUE)) {
+    remotes::install_github("SandipGarai/GaMa", ref = "master", dependencies = TRUE)
+  }
+  
+  # Load the package
+  library(package, character.only = TRUE)
+}
+
+
+.libPaths() # default library path
+
+search() # currently loaded packages
+
+# Confirm that the 'GaMa' package is installed in one of your library paths
+installed.packages()["GaMa", , drop = FALSE]
+
+# Load library ####
+
+# 1 expand_accession_ranges ####
+
+# Example of defining accession number ranges.
+accession_ranges <- list(
+  SRU1 = "AJ240966 to AJ240970",
+  STU2 = "AB015240 to AB015245",
+  WPU13 = "L11934 to L11939",
+  INU20 = c("AF277467 to AF277470", "AF333080 to AF333085")
+)
+
+# Use the function to expand accession ranges
+sam_acc <- GaMa::expand_accession_ranges(accession_ranges)
+print(sam_acc)
+
+# 2 get_sequence_information ####
+
+accessions_to_query <- sam_acc$accession
+seq_info <- GaMa::get_sequence_information(accessions_to_query, remove_dot_1 = TRUE)
+print(seq_info)
+
+# 3 preprocess_for_alignment####
+
+result <- GaMa::preprocess_for_alignment(sam_acc, seq_info)
+
+# Access the resulting data frames
+merged_data <- result$merged_data
+main_data <- result$main_data
+final_data <- result$final_data
+
+# 4 write_fasta ####
+
+# Example usage:
+data <- final_data
+
+# Call the function
+fasta_content <- GaMa::write_fasta(data)
+
+# Print or use the `fasta_content` as needed
+print(fasta_content)
+
+# Print a message indicating successful file creation
+cat("FASTA file has been created and saved at:", output_file_path, "\n")
+
+# 5 SampleID_vs_NumSequences ####
+
+plots <- GaMa::SampleID_vs_NumSequences(final_data)
+
+# 6 preprocess_for_alignment ####
+
+# If you want to use the final data:
+final_data <- GaMa::preprocess_for_alignment(sam_acc, seq_info)$final_data
+
+# If you want to sample 10% from each SampleID group:
+sampled_data <- GaMa::data_sampling(final_data, sample_proportion = 0.1)
+
+# 7 alignment_info ####
+
+alignment_results <- GaMa::alignment_info(final_data, type = "global", verbose = 1)
+
+# Access the resulting data frames
+score_matrix <- alignment_results$score_matrix
+normalized_score_matrix <- alignment_results$normalized_score_matrix
+
+total_aligned_positions_matrix <- alignment_results$total_aligned_positions_matrix
+number_of_matching_positions_matrix <- alignment_results$number_of_matching_positions_matrix
+
+percent_similarity_matrix <- alignment_results$percent_similarity_matrix
+
+alignment_results_list <- alignment_results$alignment_results_list
+
+alignment_info_matrix <- alignment_results$alignment_info_matrix
+
+# 8 compute_average_similarity_matrix ####
+
+# Assuming you have a percent_similarity_matrix
+average_percent_similarity <- GaMa::compute_average_similarity_matrix(percent_similarity_matrix)
+print(average_percent_similarity)
+
+# 9 generate_heatmaps ####
+
+heatmap_files <- GaMa::generate_heatmaps(average_percent_similarity)
+
+# 10 clustering_average_similarity ####
+
+clustering_result <- GaMa::clustering_average_similarity(average_percent_similarity)
+
+# Extract the dendrogram and clustered data
+dend_colored <- clustering_result$dendrogram
+clustered_data <- clustering_result$clustered_data
+Cluster_SampleID_Percentage <- clustering_result$Cluster_SampleID_Percentage
+Cluster_TotalPercentage <- clustering_result$Cluster_TotalPercentage
+
+# 11 clustering_percent_similarity ####
+
+clustering_result <- GaMa::clustering_percent_similarity(percent_similarity_matrix)
+
+# Extract the dendrogram and clustered data
+dend_colored <- clustering_result$dendrogram
+clustered_data <- clustering_result$clustered_data
+Cluster_SampleID_Percentage <- clustering_result$Cluster_SampleID_Percentage
+Cluster_TotalPercentage <- clustering_result$Cluster_TotalPercentage
+
+# 12 bubble_plot_count ####
+
+# Example usage with clustered_data
+clustered_data <- clustered_data # Load or generate your clustered data
+bubble_plot_count <- GaMa::bubble_plot_count(clustered_data = clustered_data,
+                                             title = "Bubble Plot of Clusters",
+                                             x_label = "Clusters",
+                                             y_label = "Sample ID",
+                                             size_label = "Count",
+                                             color_label = "Sample ID")
+
+# 13 bubble_plot_percentage ####
+
+# Example usage with Cluster_SampleID_Percentage
+Cluster_SampleID_Percentage <- Cluster_SampleID_Percentage
+bubble_plot_percentage <- GaMa::bubble_plot_percentage(Cluster_SampleID_Percentage,
+                                                       title = "Bubble Plot",
+                                                       x_label = "Clusters",
+                                                       y_label = "Sample ID",
+                                                       size_label = "Percentage",
+                                                       color_label = "Sample ID")
+
+
+# 14 tree_average_similarity ####
+
+# Example usage with similarity_matrix
+result <- GaMa::tree_average_similarity(average_percent_similarity)
+tree <- result$tree
+color_palette <- result$color_palette
+
+# 15 tree_percent_similarity ####
+
+# Example usage with percent_similarity_matrix
+result <- GaMa::tree_percent_similarity(percent_similarity_matrix)
+tree <- result$tree
+color_palette <- result$color_palette
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+##############################################################################
+
+# List of parent directory names
+parent_directories <- c("ParentDir1", "ParentDir2", "ParentDir3")
+
+# List of subdirectory names
+subdirectories <- c("Subdir1", "Subdir2", "Subdir3")
+
+# Loop through each parent directory
+for (parent_directory in parent_directories) {
+  # Combine the current parent directory with each subdirectory
+  for (subdirectory in subdirectories) {
+    # Combine the parent and subdirectory paths
+    current_output_directory <- file.path(parent_directory, subdirectory)
+    
+    # Check if the directory exists, and create it if not
+    if (!file.exists(current_output_directory)) {
+      dir.create(current_output_directory, recursive = TRUE)
+    }
+  }
+}
+
+
+# List of parent directories and associated subdirectories
+directory_structure <- list(
+  ParentDir1 = c("Subdir1", "Subdir2"),
+  ParentDir2 = c("Subdir3", "Subdir4"),
+  ParentDir3 = c("Subdir5", "Subdir6")
+)
+
+# Loop through each parent directory
+for (parent_directory in names(directory_structure)) {
+  # Get the associated subdirectories for the current parent directory
+  subdirectories <- directory_structure[[parent_directory]]
+  
+  # Combine the current parent directory with each subdirectory
+  for (subdirectory in subdirectories) {
+    # Combine the parent and subdirectory paths
+    current_output_directory <- file.path(parent_directory, subdirectory)
+    
+    # Check if the directory exists, and create it if not
+    if (!file.exists(current_output_directory)) {
+      dir.create(current_output_directory, recursive = TRUE)
+    }
+  }
+}
